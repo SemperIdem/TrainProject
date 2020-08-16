@@ -1,13 +1,12 @@
-const forms = () => {
+import checkNumInputs from './checkNumInputs';
+
+const forms = (state) => {
   const form = document.querySelectorAll('form'),
         inputs = document.querySelectorAll('input'),
         phoneInputs = document.querySelectorAll('input[name="user_phone"]');
 
-  phoneInputs.forEach(item => {
-    item.addEventListener('input', () => {
-        item.value = item.value.replace(/\D/, '');
-    });
-  })
+  checkNumInputs('input[name="user_phone"]');    
+
   const message = {
     loading: 'Загрузка...',
     succes: 'Спасибо! С вами свяжутся',
@@ -25,9 +24,19 @@ const forms = () => {
 
   const clearInputs = () => {
     inputs.forEach(item => {
+        console.log('item ' + item.value);
         item.value = '';
     });
   };
+
+  const clearState = () => {
+    console.log('Clear State')
+    console.log(state);
+    for (const prop of Object.getOwnPropertyNames(state)) {
+      delete state[prop];
+    }
+    console.log(state);
+  }
 
   form.forEach(item => {
     item.addEventListener('submit', (e) => {
@@ -37,7 +46,13 @@ const forms = () => {
       statusMessage.classList.add('status');
       item.appendChild(statusMessage);
 
+      console.log('Send state ' + state);
       const formData = new FormData(item);
+      if (item.getAttribute('data-calc') == "end") {
+          for (let key in state) {
+              formData.append(key, state[key]);
+          }
+      }
 
       postData('assets/server.php', formData)
           .then(res => {
@@ -46,7 +61,9 @@ const forms = () => {
           })
           .catch(() => statusMessage.textContent = message.failure)
           .finally(() => {
+              console.log('FINAL');
               clearInputs();
+              clearState();
               setTimeout(() => {
                 statusMessage.remove();
               },  5000);
